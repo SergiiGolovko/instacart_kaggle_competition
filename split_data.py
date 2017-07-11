@@ -37,7 +37,7 @@ def split_data(nchunks=NCHUNKS):
     orders_prior = orders[orders['eval_set'] == 'prior']
     orders_prior = merge(orders_prior, order_products_prior, on='order_id')
     orders_train = orders[orders['eval_set'] == 'train']
-    orders_train = merge(orders, order_products_train, on='order_id')
+    orders_train = merge(orders_train, order_products_train, on='order_id')
     orders_test = orders[orders['eval_set'] == 'test'].copy()
     orders = concat([orders_prior, orders_train, orders_test])
 
