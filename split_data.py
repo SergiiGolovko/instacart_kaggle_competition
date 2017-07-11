@@ -34,24 +34,27 @@ def split_data(nchunks=NCHUNKS):
 
     # Merge / concatenate all orders together.
     info('Concatenating data.')
-    orders_prior = merge(orders, order_products_prior, on='order_id')
+    orders_prior = orders[orders['eval_set'] == 'prior']
+    orders_prior = merge(orders_prior, order_products_prior, on='order_id')
+    orders_train = orders[orders['eval_set'] == 'train']
     orders_train = merge(orders, order_products_train, on='order_id')
     orders_test = orders[orders['eval_set'] == 'test'].copy()
     orders = concat([orders_prior, orders_train, orders_test])
-    orders.sort_values(by=['user_id', 'order_number'], inplace=True)
 
-    # Orders are sequential here, so we can split by chunks.
+    # User ids are sequential here, so we can split by chunks.
     info('Final split.')
-    order_ids = arange(start=1, stop=orders.order_id.max() + 1)
-    chunks = array_split(order_ids, nchunks)
+    user_ids = arange(start=1, stop=orders.user_id.max() + 1)
+    chunks = array_split(user_ids, nchunks)
 
     # Finally make splits.
     makedirs(ORDERS_DIR, exist_ok=True)
     for i, chunk in enumerate(chunks):
         info('Saving chunk #%d.' % i)
-        chunk_df = DataFrame(chunk, columns=['order_id'])
-        chunk_orders = merge(chunk_df, orders, on='order_id')
-        file = join(ORDERS_DIR, 'orders_%s_%s.pckl' % (chunk[0], chunk[-1]))
+        chunk_df = DataFrame(chunk, columns=['user_id'])
+        chunk_orders = merge(chunk_df, orders, on='user_id')
+        sort_cols = ['user_id', 'order_number', 'add_to_cart_order']
+        chunk_orders.sort_values(by=sort_cols, inplace=True)
+        file = join(ORDERS_DIR, 'users_%s_%s.pckl' % (chunk[0], chunk[-1]))
         dump_data(chunk_orders, file)
 
     info('Data is split.')
