@@ -23,21 +23,21 @@ def features_by_product(data):
     label = data['reordered'].iloc[-1]
 
     # Number of orders and total orders.
-    total_orders = data['order_number'].iloc[-1]
+    total_orders = data['order_number'].iloc[-1] - 1
     num_orders = len(data) - 1
 
     # last_time_ordered, is_prev_order, is_before_prev_order
     last_time_ordered = data['order_number'].iloc[-2] if num_orders > 0 else -1
-    is_prev_order = last_time_ordered == num_orders
-    if last_time_ordered == num_orders - 1:
+    is_prev_order = last_time_ordered == total_orders
+    if (last_time_ordered == total_orders - 1) and (total_orders > 0):
         is_before_prev_order = True
     elif num_orders > 1:
-        is_before_prev_order = data['order_number'].iloc[-3] == num_orders - 1
+        is_before_prev_order = data['order_number'].iloc[-3] == total_orders - 1
     else:
         is_before_prev_order = False
 
-    return [label, total_orders, num_orders, last_time_ordered, is_prev_order,
-            is_before_prev_order]
+    return [label, total_orders, num_orders, last_time_ordered,
+            int(is_prev_order), int(is_before_prev_order)]
 
 
 def feature_by_product_names():
