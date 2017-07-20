@@ -4,17 +4,20 @@ from os.path import realpath, join, split
 from pandas import concat, read_csv, merge, DataFrame
 
 from pickle_utils import dump_data, try_load
+from multiprocess_utils import multiprocess_from_folder
 
 # Directory paths.
 BASE_DIR = split(realpath(__file__))[0]
 DATA_DIR = join(BASE_DIR, 'data')
 PICKLE_DIR = join(BASE_DIR, 'pickles')
+ORDERS_DIR = join(PICKLE_DIR, 'orders')
 
 # File paths.
 DEPARTMENTS_FILE = join(DATA_DIR, 'departments.csv')
 AISLES_FILE = join(DATA_DIR, 'aisles.csv')
 PRODUCTS_FILE = join(DATA_DIR, 'products.csv')
 PRODUCTS_INFO_FILE = join(PICKLE_DIR, 'product_info.pckl')
+BASIC_FEATURES_FILE = join(PICKLE_DIR, 'basic_features.pckl')
 
 
 def features_by_product(data):
@@ -80,7 +83,7 @@ def basic_features(orders_file):
     orders = orders[~drop_ind]
 
     # Create features.
-    gr_orders = orders.groupby(['user_id', 'product_id'])
+    gr_orders = orders.groupby(['user_id', 'product_id', 'eval_set'])
     gr_orders = gr_orders.apply(lambda x: features_by_product(x)).reset_index()
 
     # Generate result
@@ -88,6 +91,7 @@ def basic_features(orders_file):
                     columns=feature_by_product_names())
     res['user_id'] = gr_orders['user_id']
     res['product_id'] = gr_orders['product_id']
+    res['eval_set'] = gr_orders['eval_set']
 
     # Add department and aisle id.
     product_info = get_products_info()
@@ -117,11 +121,8 @@ def get_products_info():
     return data
 
 
-def main():
-    return basic_features('pickles/orders/users_1_3223.pckl')
-
-
 if __name__ == '__main__':
     format = '%(asctime)s %(levelname)s %(filename)s %(funcName)s %(message)s'
     basicConfig(level=INFO, format=format, datefmt='%m/%d/%Y %I:%M:%S')
-    info(main().shape)
+    data = multiprocess_from_folder(basic_features, 'orders_file', ORDERS_DIR)
+    dump_data(data, BASIC_FEATURES_FILE)
