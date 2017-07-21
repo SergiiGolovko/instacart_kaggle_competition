@@ -39,13 +39,18 @@ def features_by_product(data):
     else:
         is_before_prev_order = False
 
-    return [label, total_orders, num_orders, last_time_ordered,
+    # Number of times the order was reordered from previous time.
+    num_reordered = (
+        sum(data['order_number'].iloc[:-1] + 1 == data['order_number'].iloc[1:]))
+    num_reordered = num_reordered - is_prev_order
+
+    return [label, total_orders, num_orders, num_reordered, last_time_ordered,
             int(is_prev_order), int(is_before_prev_order)]
 
 
 def feature_by_product_names():
-    return ['label', 'total_orders', 'num_orders', 'last_time_ordered',
-            'is_prev_order', 'is_before_prev_order']
+    return ['label', 'total_orders', 'num_orders', 'num_reordered',
+            'last_time_ordered', 'is_prev_order', 'is_before_prev_order']
 
 
 def basic_features(orders_file):
