@@ -5,6 +5,7 @@ from pandas import concat, read_csv, merge, DataFrame
 
 from pickle_utils import dump_data, try_load
 from multiprocess_utils import multiprocess_from_folder
+from globals import CONFIG
 
 # Directory paths.
 BASE_DIR = split(realpath(__file__))[0]
@@ -44,13 +45,17 @@ def features_by_product(data):
         sum(data['order_number'].iloc[:-1] + 1 == data['order_number'].iloc[1:]))
     num_reordered = num_reordered - is_prev_order
 
-    return [label, total_orders, num_orders, num_reordered, last_time_ordered,
-            int(is_prev_order), int(is_before_prev_order)]
+    # Eval set.
+    train_set = data['eval_set'].iloc[-1] == 'train'
+
+    return [int(label), total_orders, num_orders, num_reordered, last_time_ordered,
+            int(is_prev_order), int(is_before_prev_order), train_set]
 
 
 def feature_by_product_names():
     return ['label', 'total_orders', 'num_orders', 'num_reordered',
-            'last_time_ordered', 'is_prev_order', 'is_before_prev_order']
+            'last_time_ordered', 'is_prev_order', 'is_before_prev_order',
+            'train_set']
 
 
 def basic_features(orders_file):
@@ -59,7 +64,6 @@ def basic_features(orders_file):
 
     orders = try_load(orders_file, raise_error=True)
     train_inds = (orders['eval_set'] == 'train')
-    y_copy = orders['reordered'].copy()
 
     # Drop not reordered items for train set.
     drop_ind = (orders['eval_set'] == 'train') & (orders['reordered'] == 0)
@@ -88,7 +92,7 @@ def basic_features(orders_file):
     orders = orders[~drop_ind]
 
     # Create features.
-    gr_orders = orders.groupby(['user_id', 'product_id', 'eval_set'])
+    gr_orders = orders.groupby(['user_id', 'product_id'])
     gr_orders = gr_orders.apply(lambda x: features_by_product(x)).reset_index()
 
     # Generate result
@@ -96,7 +100,7 @@ def basic_features(orders_file):
                     columns=feature_by_product_names())
     res['user_id'] = gr_orders['user_id']
     res['product_id'] = gr_orders['product_id']
-    res['eval_set'] = gr_orders['eval_set']
+    # res['eval_set'] = gr_orders['eval_set']
 
     # Add department and aisle id.
     product_info = get_products_info()
@@ -129,5 +133,9 @@ def get_products_info():
 if __name__ == '__main__':
     format = '%(asctime)s %(levelname)s %(filename)s %(funcName)s %(message)s'
     basicConfig(level=INFO, format=format, datefmt='%m/%d/%Y %I:%M:%S')
-    data = multiprocess_from_folder(basic_features, 'orders_file', ORDERS_DIR)
-    dump_data(data, BASIC_FEATURES_FILE)
+    if CONFIG['CONFIG'] == 'config_normal':
+        data = multiprocess_from_folder(basic_features, 'orders_file', ORDERS_DIR)
+        dump_data(data, BASIC_FEATURES_FILE)
+    else:   # 'config_test'
+        data = basic_features('pickles/orders/users_1_3223.pckl')
+        dump_data(data, 'pickles/features_1_3223.pckl')
