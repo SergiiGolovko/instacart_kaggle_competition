@@ -37,3 +37,10 @@ class MeanF1ScoreTest(TestCase):
         user_id = array([1, 1, 1, 1])
         self.assertEqual(mean_F1_score(y_true, y_pred_proba, user_id, 0.5),
                          0.5)
+
+    def test_two_users(self):
+        y_true = array([0, 0, 1, 1, 0, 0, 0, 0])
+        y_pred_proba = array([0.51, 0.49, 0.49, 0.51, 0.49, 0.49, 0.49, 0.51])
+        user_id = array([1, 1, 1, 1, 2, 2, 2, 2])
+        self.assertEqual(mean_F1_score(y_true, y_pred_proba, user_id, 0.5),
+                         0.25)
