@@ -42,7 +42,6 @@ def modelling(features_file, mode=MODELLING_MODE):
     # 1. Load data from the file and create train/test sets.
     features = try_load(features_file, raise_error=True)
     train_inds = features['train_set'] == 1
-    features[features['user_id'] == 1].to_csv('features.csv')
     drop_cols = ['train_set', 'user_id', 'label']
     feat_cols = [c for c in features.columns if c not in drop_cols]
     X_train = features[feat_cols][train_inds].values
