@@ -22,7 +22,7 @@ def try_load(path, raise_error=False):
             return pickle.load(file)
     except:
         if raise_error:
-            raise ValueError('%s file failed to load.')
+            raise ValueError('%s file failed to load.' % file)
         return None
 
 
