@@ -1,5 +1,5 @@
 from logging import basicConfig, info, INFO
-from numpy import array
+from numpy import array, nan
 from os.path import realpath, join, split
 from pandas import concat, read_csv, merge, DataFrame
 
@@ -48,6 +48,9 @@ def features_by_product(data):
     # Eval set.
     train_set = data['eval_set'].iloc[-1] == 'train'
 
+    if data['eval_set'].iloc[-1] == 'prior':
+        raise ValueError('Prior must not be last eval set.')
+
     return [int(label), total_orders, num_orders, num_reordered, last_time_ordered,
             int(is_prev_order), int(is_before_prev_order), train_set]
 
@@ -63,11 +66,10 @@ def basic_features(orders_file):
     info('Creating basic features.')
 
     orders = try_load(orders_file, raise_error=True)
-    train_inds = (orders['eval_set'] == 'train')
 
     # Drop not reordered items for train set.
     drop_ind = (orders['eval_set'] == 'train') & (orders['reordered'] == 0)
-    orders = orders[~drop_ind]
+    orders.loc[drop_ind, 'reordered'] = nan
 
     # Add to train set all products that were previously ordered and label
     # them as being not reordered.
@@ -88,7 +90,7 @@ def basic_features(orders_file):
     orders = concat([orders, user_prod_order])
 
     # Drop test set with reordered null.
-    drop_ind = (orders['eval_set'] == 'test') & (orders['reordered'].isnull())
+    drop_ind = orders['reordered'].isnull()
     orders = orders[~drop_ind]
 
     # Create features.
