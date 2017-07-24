@@ -1,0 +1,47 @@
+name: py36
+channels:
+- !!python/unicode
+  'conda-forge'
+- !!python/unicode
+  'defaults'
+dependencies:
+- !!python/unicode
+  'xgboost=0.6a2=py36_0'
+- !!python/unicode
+  'mkl=2017.0.3=0'
+- !!python/unicode
+  'numpy=1.13.1=py36_0'
+- !!python/unicode
+  'openssl=1.0.2l=0'
+- !!python/unicode
+  'pandas=0.20.2=np113py36_0'
+- !!python/unicode
+  'pip=9.0.1=py36_1'
+- !!python/unicode
+  'psutil=5.2.2=py36_0'
+- !!python/unicode
+  'python=3.6.2=0'
+- !!python/unicode
+  'python-dateutil=2.6.0=py36_0'
+- !!python/unicode
+  'pytz=2017.2=py36_0'
+- !!python/unicode
+  'readline=6.2=2'
+- !!python/unicode
+  'scipy=0.19.1=np113py36_0'
+- !!python/unicode
+  'setuptools=27.2.0=py36_0'
+- !!python/unicode
+  'six=1.10.0=py36_0'
+- !!python/unicode
+  'sqlite=3.13.0=0'
+- !!python/unicode
+  'tk=8.5.18=0'
+- !!python/unicode
+  'wheel=0.29.0=py36_0'
+- !!python/unicode
+  'xz=5.2.2=1'
+- !!python/unicode
+  'zlib=1.2.8=3'
+prefix: !!python/unicode '//anaconda/envs/py36'
+
