@@ -1,5 +1,5 @@
 from logging import basicConfig, info, debug, DEBUG
-from numpy import array, concatenate, zeros
+from numpy import array, concatenate, zeros, argmax
 from pandas import DataFrame, merge, read_csv
 
 from pickle_utils import try_load
@@ -41,7 +41,7 @@ def mean_F1_score(y_true, y_pred_proba, user_id, threshold=0.5):
     return res_df['F1'].mean()
 
 
-def evaluate_predictions(pred_file, features_file):
+def evaluate_predictions(pred_file, features_file, thresholds, output_file):
 
     info('Evaluating predictions.')
 
@@ -54,8 +54,12 @@ def evaluate_predictions(pred_file, features_file):
           % (len(df), df['user_id'].nunique()))
     info('Finished loading data.')
     debug('Scoring predictions')
-    score = mean_F1_score(df['label'], y_pred_proba, df['user_id'], 0.05)
-    debug('Score is: %.5f' % score)
+    scores = [mean_F1_score(df['label'], y_pred_proba, df['user_id'], th/100)
+              for th in thresholds]
+    res = DataFrame({'threshold': thresholds, 'score': scores})
+    res.to_csv(output_file, index=False)
+    debug('Optimal threshold is: %d' % thresholds[argmax(array(scores))])
+    debug('Optimal score is: %.3f' % scores[argmax(array(scores))])
     info('Finished evaluating predictions.')
 
 
@@ -96,6 +100,8 @@ if __name__ == '__main__':
     test_pred_file = './pickles/raw_predictions/XGBClassifier'
     orders_file = './data/orders.csv'
     output_file = './output/predictions.csv'
-    evaluate_predictions(train_pred_file, features_file)
+    statistics_file = './statistics/thresholds.csv'
+    evaluate_predictions(
+            train_pred_file, features_file, range(15, 50), statistics_file)
     generate_predictions(
             test_pred_file, features_file, orders_file, output_file, 0.23)
