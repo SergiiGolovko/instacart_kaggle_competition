@@ -2,6 +2,7 @@ from logging import basicConfig, info, debug, DEBUG
 from numpy import array, concatenate, zeros, argmax
 from pandas import DataFrame, merge, read_csv
 
+from globals import CONFIG
 from pickle_utils import try_load
 
 
@@ -96,7 +97,10 @@ if __name__ == '__main__':
 
     format = '%(asctime)s %(levelname)s %(filename)s %(funcName)s %(message)s'
     basicConfig(level=DEBUG, format=format, datefmt='%m/%d/%Y %I:%M:%S')
-    features_file = './pickles/features_1_3223.pckl'
+    if CONFIG['CONFIG'] == 'config_test':
+        features_file = './pickles/features_1_3223.pckl'
+    else:
+        features_file = './pickles/basic_features.pckl'
     train_pred_file = './pickles/metafeatures/XGBClassifier'
     test_pred_file = './pickles/raw_predictions/XGBClassifier'
     orders_file = './data/orders.csv'
