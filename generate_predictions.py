@@ -36,6 +36,7 @@ def mean_F1_score(y_true, y_pred_proba, user_id, threshold=0.5):
         lambda x: 2 * (x.precision * x.recall) / (x.precision + x.recall)
         if x.precision + x.recall > 0 else 0,
         axis=1)
+    debug('Mean F1 score: %.3f' % res_df['F1'].mean())
     info('Mean F1 score is calculated.')
 
     return res_df['F1'].mean()
