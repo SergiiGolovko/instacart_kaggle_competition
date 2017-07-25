@@ -42,7 +42,8 @@ def features_by_product(data):
 
     # Number of times the order was reordered from previous time.
     num_reordered = (
-        sum(data['order_number'].iloc[:-1] + 1 == data['order_number'].iloc[1:]))
+        sum(data['order_number'].iloc[:-1].values + 1 ==
+            data['order_number'].iloc[1:].values))
     num_reordered = num_reordered - is_prev_order
 
     # Eval set.
