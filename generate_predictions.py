@@ -1,6 +1,6 @@
 from logging import basicConfig, info, debug, DEBUG
 from numpy import array, concatenate, zeros
-from pandas import DataFrame
+from pandas import DataFrame, merge, read_csv
 
 from pickle_utils import try_load
 
@@ -59,10 +59,43 @@ def evaluate_predictions(pred_file, features_file):
     info('Finished evaluating predictions.')
 
 
+def generate_predictions(
+        pred_file, features_file, orders_file, output_file, threshold):
+
+    info('Generating predictions.')
+
+    # Load data.
+    y_pred_proba = try_load(pred_file, raise_error=True)
+    wanted_cols = ['user_id', 'train_set', 'product_id']
+    df = try_load(features_file, raise_error=True)[wanted_cols]
+    df = df[df['train_set'] == 0][['user_id', 'train_set', 'product_id']]
+    df['y'] = y_pred_proba > threshold
+    orders = read_csv(orders_file, usecols=['user_id', 'order_id', 'eval_set'])
+    orders = orders[orders['eval_set'] == 'test']
+    df = merge(df, orders[['order_id', 'user_id']], on='user_id')
+    df.drop(['user_id', 'train_set'], 1, inplace=True)
+
+    # Geerate predictions.
+    df['y'] = df['y'] > threshold
+    res = df.groupby('order_id').apply(lambda x: set(x.loc[x.y, 'product_id']))
+    res = res.reset_index()
+    res.rename(columns={0: 'product_id'}, inplace=True)
+    res['product_id'] = res['product_id'].apply(
+            lambda s: ' '.join({str(int(el)) for el in s}) if len(s) > 0
+            else 'None')
+    res[['order_id', 'product_id']].to_csv(output_file, index=False)
+    info('Finished generate_predictions')
+
+
 if __name__ == '__main__':
 
     format = '%(asctime)s %(levelname)s %(filename)s %(funcName)s %(message)s'
     basicConfig(level=DEBUG, format=format, datefmt='%m/%d/%Y %I:%M:%S')
     features_file = './pickles/features_1_3223.pckl'
-    pred_file = './pickles/metafeatures/XGBClassifier'
-    evaluate_predictions(pred_file, features_file)
+    train_pred_file = './pickles/metafeatures/XGBClassifier'
+    test_pred_file = './pickles/raw_predictions/XGBClassifier'
+    orders_file = './data/orders.csv'
+    output_file = './output/predictions.csv'
+    evaluate_predictions(train_pred_file, features_file)
+    generate_predictions(
+            test_pred_file, features_file, orders_file, output_file, 0.23)
